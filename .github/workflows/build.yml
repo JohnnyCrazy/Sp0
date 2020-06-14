@@ -1,0 +1,80 @@
+name: Sp0 Build
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          output: sp0
+        - os: windows-latest
+          output: sp0.exe
+        - os: macos-latest
+          output: sp0
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Install dotnet warp
+      run: dotnet tool install --global dotnet-warp --version 1.1.0
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Replace Version
+      run: |
+        echo "GITHUB_REF: $GITHUB_REF"
+        echo "GITHUB_SHA: $GITHUB_SHA"
+        if [[ "$GITHUB_REF" == *"refs/tags"* ]]; then
+          BIN_VERSION="${GITHUB_REF##*/}"
+        else
+          BIN_VERSION="git:$GITHUB_SHA"
+        fi
+        echo "BIN_VERSION: $BIN_VERSION"
+        sed "s/\".*\"/\"$BIN_VERSION\"/g" Sp0.Core/src/Version.cs > Sp0.Core/src/VersionInfo.cs
+        rm Sp0.Core/src/Version.cs
+      shell: bash
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Publish & Warp
+      run: cd Sp0.Core && dotnet warp -o ${{ matrix.output }}
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: sp0-${{ matrix.os }}
+        path: Sp0.Core/${{ matrix.output }}
+  deploy-github:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@master
+    - name: Rename binaries
+      run: |
+        cp sp0-macos-latest/sp0 sp0-mac-x64
+        cp sp0-ubuntu-latest/sp0 sp0-linux-x64
+        cp sp0-windows-latest/sp0.exe sp0-win-x64.exe
+    - name: Release To Github
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        prerelease: true
+        files: |
+          sp0-mac-x64
+          sp0-linux-x64
+          sp0-win-x64.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
