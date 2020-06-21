@@ -5,6 +5,7 @@ pkgver=${TEMPLATE_PKGVER}
 pkgrel=1
 pkgdesc='A cross-platform CLI Tool for requesting the Spotify Web API, with a focus on automation. '
 arch=('x86_64')
+options=(!strip)
 url='https://github.com/JohnnyCrazy/Sp0'
 license=('MIT')
 provides=("sp0")
