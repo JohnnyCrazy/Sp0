@@ -78,3 +78,28 @@ jobs:
           sp0-win-x64.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy-aur:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Download Artifacts
+      uses: actions/download-artifact@master
+    - name: Rename binaries
+      run: |
+        cp sp0-ubuntu-latest/sp0 sp0-linux-x64
+    - name: Generate AUR Package
+      run: |
+        export TEMPLATE_PKGVER="${GITHUB_REF##*/}"
+        export TEMPLATE_PKGSUM="$(sha256sum sp0-linux-x64 | cut -d ' ' -f 1)"
+        cat deploy/aur/PKGBUILD.template | envsubst '${TEMPLATE_PKGVER} ${TEMPLATE_PKGSUM}' > PKGBUILD
+    - name: Publish AUR Package
+      uses: KSXGitHub/github-actions-deploy-aur@v2.0.2
+      with:
+        pkgname: sp0-bin
+        pkgbuild: PKGBUILD
+        commit_username: ${{ secrets.AUR_USERNAME }}
+        commit_email: ${{ secrets.AUR_EMAIL }}
+        ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        commit_message: "Update AUR Package"
