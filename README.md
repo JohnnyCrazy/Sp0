@@ -1,7 +1,7 @@
 # Sp0
 
 ![Sp0 Build](https://github.com/JohnnyCrazy/Sp0/workflows/Sp0%20Build/badge.svg)
-![AUR version](https://img.shields.io/aur/version/sp0?label=AUR)
+![AUR version](https://img.shields.io/aur/version/sp0-bin?label=AUR)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/JohnnyCrazy/Sp0?include_prereleases&label=GH%20Release)
 
 A simple CLI tool for interacting with the Spotify Web API with a strong focus on automation, written in .NET/C#. Under the hood, it's just a wrapper for supplying args to [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET/).
