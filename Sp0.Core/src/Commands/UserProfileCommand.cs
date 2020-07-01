@@ -25,9 +25,10 @@ namespace Sp0.Core
       {
         userProfile.Description = "Gets information about a spotify user.";
 
-        var ids = userProfile.Option<List<string>>(
+        var ids = userProfile.OptionalOption<List<string>>(
           "-i|--ids",
-          "Optional: A list of Spotify user ids, seperated by comma. If omitted, the currently logged in user is queried",
+          "A list of Spotify user ids, seperated by comma",
+          "currently logged in user",
           CommandOptionType.SingleValue
         );
         var output = new OutputArgument(userProfile);

@@ -46,6 +46,48 @@ This configuration does not allow to manage and access user related endpoints, l
 
 Afterwards, login via `sp0 login` and follow the instructions.
 
+## Examples
+
+### Transfer Playback using fzf
+
+```bash
+#!/bin/sh
+device="$(sp0 player devices | jq -r "map(.name + \":\" + .id) | join(\"\n\")" | fzf | cut -d':' -f2)"
+if [ "$device" ]; then
+  sp0 player transfer "$device" --play
+fi
+```
+
+### Export a Playlist
+
+```bash
+#!/bin/sh
+backupFile="${1:-backup.txt}"
+
+playlist="$(sp0 playlists of-user | jq -sr "map(.name + \":\" + .id) | join(\"\n\")" | fzf)"
+playlistId="$(echo "$playlist" | rev | cut -d':' -f 1 | rev)"
+playlistName="$(echo "$playlist" | rev | cut -d':' -f 2- | rev)"
+file="$(printf '%q' "$playlistName")"
+if [ "$playlistId" ]; then
+  sp0 playlists get-items "$playlistId" --output uri > "$backupFile"
+  echo "Playlist track/epsiode URIs can be found in $backupFile"
+fi
+```
+
+### Import a Playlist
+
+```bash
+#!/bin/sh
+backupFile="${1:-backup.txt}"
+playlistName="${2:-Imported Playlist}"
+
+if [[ -f "$backupFile" ]]; then
+  uris="$(cat "$backupFile" | xargs echo -n | tr ' ' ',')"
+  paylistId="$(sp0 playlists create "$playlistName" --private --output id)"
+  sp0 playlists add-items "$playlistId" "$uris"
+fi
+```
+
 ## File Size & Exectution Notes
 
 As you may have noted, the binary size of ~26MB is higher than usual form similar CLI Tools. This is because the binary includes the full .NET environment in a compressed form, accomplished by [dotnet-warp](https://github.com/Hubert-Rybak/dotnet-warp).

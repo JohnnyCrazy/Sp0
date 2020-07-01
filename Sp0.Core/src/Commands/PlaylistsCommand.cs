@@ -29,8 +29,79 @@ namespace Sp0.Core
         GetCommand(playlists);
         GetItemsCommand(playlists);
         AddItemsCommand(playlists);
+        OfUserCommand(playlists);
 
         SubcommandHelper.ShowHelpOnExecute(playlists, _console);
+      });
+    }
+
+    private void OfUserCommand(CommandLineApplication playlists)
+    {
+      playlists.Command("of-user", (ofUser) =>
+      {
+        ofUser.Description = "Get a List of a User's Playlists";
+
+        var userId = ofUser.OptionalOption<string>(
+          "-u|--user-id",
+          "The user’s Spotify user ID.",
+          "Currently logged in user",
+          CommandOptionType.SingleValue
+        );
+
+        var paging = new PagingOptions(ofUser);
+
+        var output = new OutputArgument(ofUser);
+        var onJson = output.WithFormat("json", true);
+        var onId = output.WithFormat("id");
+        var onUri = output.WithFormat("uri");
+
+        ofUser.OnExecuteAsync(async (cancel) =>
+        {
+          if (userId.HasValue())
+          {
+            _spotifyService.EnsureCredentialsSet(out var spotify);
+            var page = await spotify.Playlists.GetUsers(userId.Value()!, new PlaylistGetUsersRequest
+            {
+              Limit = paging.Limit.ParsedValue ?? 50,
+              Offset = paging.Offset.ParsedValue ?? 0
+            });
+            if (paging.All.HasValue())
+            {
+              var allPages = await spotify.PaginateAll(page);
+              onJson(() => allPages.ToList().ForEach((playlist) => _console.WriteObject(playlist)));
+              onId(() => allPages.ToList().ForEach((playlist) => _console.WriteLine(playlist.Id)));
+              onUri(() => allPages.ToList().ForEach((playlist) => _console.WriteLine(playlist.Uri)));
+            }
+            else
+            {
+              onJson(() => _console.WriteObject(page));
+              onId(() => page.Items.ForEach((item) => _console.WriteLine(item.Id)));
+              onUri(() => page.Items.ForEach((item) => _console.WriteLine(item.Uri)));
+            }
+          }
+          else
+          {
+            _spotifyService.EnsureUserLoggedIn(out var spotify);
+            var page = await spotify.Playlists.CurrentUsers(new PlaylistCurrentUsersRequest
+            {
+              Limit = paging.Limit.ParsedValue ?? 50,
+              Offset = paging.Offset.ParsedValue ?? 0
+            });
+            if (paging.All.HasValue())
+            {
+              var allPages = await spotify.PaginateAll(page);
+              onJson(() => allPages.ToList().ForEach((playlist) => _console.WriteObject(playlist)));
+              onId(() => allPages.ToList().ForEach((playlist) => _console.WriteLine(playlist.Id)));
+              onUri(() => allPages.ToList().ForEach((playlist) => _console.WriteLine(playlist.Uri)));
+            }
+            else
+            {
+              onJson(() => _console.WriteObject(page));
+              onId(() => page.Items.ForEach((item) => _console.WriteLine(item.Id)));
+              onUri(() => page.Items.ForEach((item) => _console.WriteLine(item.Uri)));
+            }
+          }
+        });
       });
     }
 
@@ -67,11 +138,13 @@ namespace Sp0.Core
 
         var playlistId = getTracks.Argument("playlist-id", "The Spotify ID for the playlist.").IsRequired();
 
-        var market = getTracks.Option<string>(
+        var market = getTracks.OptionalOption<string>(
            "-m|--market",
-           "Optional: The specifc market, used for track re-linking",
+           "The specifc market, used for track re-linking",
+           "none",
            CommandOptionType.SingleValue
-         );
+        );
+        var paging = new PagingOptions(getTracks);
 
         var output = new OutputArgument(getTracks);
         var onJson = output.WithFormat("json", true);
@@ -81,28 +154,25 @@ namespace Sp0.Core
         getTracks.OnExecuteAsync(async (cancel) =>
         {
           _spotifyService.EnsureCredentialsSet(out var spotify);
-          var firstPage = await spotify.Playlists.GetItems(playlistId.Value!, new PlaylistGetItemsRequest
+          var page = await spotify.Playlists.GetItems(playlistId.Value!, new PlaylistGetItemsRequest
           {
-            Limit = 100,
+            Limit = paging.Limit.ParsedValue ?? 100,
+            Offset = paging.Offset.ParsedValue ?? 0,
             Market = market.Value()
           });
-          var allPages = await spotify.PaginateAll(firstPage);
-
-          onJson(() => allPages.ToList().ForEach((item) => _console.WriteObject(item)));
-          onId(() => allPages.ToList().ForEach((item) =>
+          if (paging.All.HasValue())
           {
-            if (item.Track is FullTrack track)
-              _console.WriteLine(track.Id);
-            else if (item.Track is FullEpisode episode)
-              _console.WriteLine(episode.Id);
-          }));
-          onUri(() => allPages.ToList().ForEach((item) =>
+            var allPages = await spotify.PaginateAll(page);
+            onJson(() => allPages.ToList().ForEach((item) => _console.WriteObject(item)));
+            onId(() => allPages.ToList().ForEach((item) => item.Track.ToId()));
+            onUri(() => allPages.ToList().ForEach((item) => item.Track.ToUri()));
+          }
+          else
           {
-            if (item.Track is FullTrack track)
-              _console.WriteLine(track.Uri);
-            else if (item.Track is FullEpisode episode)
-              _console.WriteLine(episode.Uri);
-          }));
+            onJson(() => _console.WriteObject(page));
+            onId(() => page.Items.ForEach((item) => _console.WriteLine(item.Track.ToId())));
+            onUri(() => page.Items.ForEach((item) => _console.WriteLine(item.Track.ToUri())));
+          }
         });
       });
     }
@@ -115,9 +185,10 @@ namespace Sp0.Core
 
         var playlistId = get.Argument("playlist-id", "The Spotify ID for the playlist.").IsRequired();
 
-        var market = get.Option<string>(
+        var market = get.OptionalOption<string>(
           "-m|--market",
-          "Optional: The specifc market, used for track re-linking",
+          "The specifc market, used for track re-linking",
+          "none",
           CommandOptionType.SingleValue
         );
 
@@ -148,24 +219,28 @@ namespace Sp0.Core
           .Argument("playlist-id", "The Spotify ID for the playlist.")
           .IsRequired();
 
-        var name = change.Option(
+        var name = change.OptionalOption<string?>(
           "-n|--name",
-          "Optional: The new name for the playlist",
+          "The new name for the playlist",
+          "none",
           CommandOptionType.SingleValue);
 
-        var privateFlag = change.Option(
+        var privateFlag = change.OptionalOption<bool?>(
           "-p|--private",
-          "Optional: If true the playlist will be private. Default: false",
+          "If set, the playlist will be private.",
+          "unset",
           CommandOptionType.NoValue);
 
-        var collaborative = change.Option(
+        var collaborative = change.OptionalOption<bool?>(
           "-c|--collaborative",
-          "Optional: If true the playlist will be collaborative. Default: false",
+          "If set, the playlist will be collaborative",
+          "unset",
           CommandOptionType.NoValue);
 
-        var description = change.Option<string?>(
+        var description = change.OptionalOption<string?>(
           "-d|--description",
-          "Optional: Value for playlist description as displayed in Spotify Clients and in the Web API.",
+          "Value for playlist description as displayed in Spotify Clients and in the Web API.",
+          "none",
           CommandOptionType.SingleValue);
 
         change.OnExecuteAsync(async (cancel) =>
@@ -195,24 +270,28 @@ namespace Sp0.Core
           .Argument("name", "The name for the new playlist. This name does not need to be unique")
           .IsRequired();
 
-        var userId = create.Option(
+        var userId = create.OptionalOption<string?>(
           "-u|--user-id",
-          "Optional: The user’s Spotify user ID. Default: logged-in user id",
+          "The user’s Spotify user ID",
+          "logged-in user id",
           CommandOptionType.SingleValue);
 
-        var privateFlag = create.Option(
+        var privateFlag = create.OptionalOption<bool?>(
           "-p |--private",
-          "Optional: If true the playlist will be private. Default: false",
+          "If set, the playlist will be private",
+          "unset",
           CommandOptionType.NoValue);
 
-        var collaborative = create.Option(
+        var collaborative = create.OptionalOption<bool?>(
           "-c|--collaborative",
-          "Optional: If true the playlist will be collaborative. Default: false",
+          "If set the playlist will be collaborative",
+          "unset",
           CommandOptionType.NoValue);
 
-        var description = create.Option<string?>(
+        var description = create.OptionalOption<string?>(
           "-d|--description",
-          "Optional: Value for playlist description as displayed in Spotify Clients and in the Web API.",
+          "Value for playlist description as displayed in Spotify Clients and in the Web API",
+          "none",
           CommandOptionType.SingleValue);
 
         var output = new OutputArgument(create);

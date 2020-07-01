@@ -40,9 +40,10 @@ namespace Sp0.Core
 
     private CommandOption DeviceIdOption(CommandLineApplication app)
     {
-      return app.Option(
+      return app.OptionalOption<string>(
         "-d|--device-id",
-        "Optional: The id of the device this command is targeting. If not supplied, the user’s currently active device is the target.",
+        "The id of the device this command is targeting",
+        "the user’s currently active device",
         CommandOptionType.SingleValue
       );
     }
@@ -104,9 +105,10 @@ namespace Sp0.Core
       {
         currentPlayback.Description = "Get information about the user’s current playback state, including track or episode, progress, and active device.";
 
-        var market = currentPlayback.Option<string>(
+        var market = currentPlayback.OptionalOption<string>(
           "-m|--market",
-          "Optional: The specifc market, used for track re-linking",
+          "The specifc market, used for track re-linking",
+          "User's market",
           CommandOptionType.SingleValue
         );
 
@@ -251,27 +253,31 @@ namespace Sp0.Core
 
         var deviceId = DeviceIdOption(play);
 
-        var contextUri = play.Option(
+        var contextUri = play.OptionalOption<string>(
           "-c|--context-uri",
-          "Optional: Spotify URI of the context to play. Valid contexts are albums, artists, playlists.",
+          "Spotify URI of the context to play. Valid contexts are albums, artists, playlists.",
+          "none",
           CommandOptionType.SingleValue
         );
 
-        var uris = play.Option<List<string>>(
+        var uris = play.OptionalOption<List<string>>(
           "-u|--uris",
-          "Optional: A list of Spotify track URIs to play, seperated by comma",
+          "A list of Spotify track URIs to play, seperated by comma",
+          "none",
           CommandOptionType.SingleValue
         );
 
-        var positionMs = play.Option<int?>(
+        var positionMs = play.OptionalOption<int?>(
           "-p|--positon-ms",
-          "Optional: Indicates from what position to start playback. Must be a positive number. Passing in a position that is greater than the length of the track will cause the player to start playing the next song.",
+          "Indicates from what position to start playback. Must be a positive number. Passing in a position that is greater than the length of the track will cause the player to start playing the next song.",
+          "none",
           CommandOptionType.SingleValue
         );
 
-        var offset = play.Option<string>(
+        var offset = play.OptionalOption<string>(
           "-o|--offset",
-          "Optional: Indicates from where in the context playback should start. Only available when context-uri corresponds to an album or playlist object, or when the uris parameter is used. Either a zero based position or URI",
+          "Indicates from where in the context playback should start. Only available when context-uri corresponds to an album or playlist object, or when the uris parameter is used. Either a zero based position or URI",
+          "none",
           CommandOptionType.SingleValue
         );
 

@@ -31,34 +31,39 @@ namespace Sp0.Core
       {
         login.Description = "Log into a user account via OAuth2. Only required when accessing user related data.";
 
-        var addressCmd = login.Option<Uri?>(
+        var addressCmd = login.OptionalOption<Uri?>(
           "-a|--address",
-          $"Optional: URI of the webserver used to authenticate. Also needs to be added as redirect uri to your spotify app. Default: {addressDefault}",
+          $"URI of the webserver used to authenticate. Also needs to be added as redirect uri to your spotify app",
+          addressDefault,
           CommandOptionType.SingleValue
         );
         addressCmd.Validators.Add(new AbsoluteURIValidator());
 
-        var portOpt = login.Option<int?>(
+        var portOpt = login.OptionalOption<int?>(
           "-p|--port",
-          $"Optional: Listen port of the authentication webserver. Default: {portDefault}",
+          $"Listen port of the authentication webserver",
+          portDefault,
           CommandOptionType.SingleValue
         );
 
-        var scopesOpt = login.Option<List<string>?>(
+        var scopesOpt = login.OptionalOption<List<string>?>(
           "-s|--scopes",
-          $"Optional: A comma seperated list of scopes to request. Default: All",
+          $"A comma seperated list of scopes to request",
+          "All",
           CommandOptionType.SingleValue
         );
 
-        var timeoutOpt = login.Option<int?>(
+        var timeoutOpt = login.OptionalOption<int?>(
           "-t|--timeout",
-          $"Optional: Timeout of command in seconds. Default: ${timeoutDefault}",
+          $"Timeout of command in seconds",
+          timeoutDefault,
           CommandOptionType.SingleValue
         );
 
-        var stateOpt = login.Option<int?>(
+        var stateOpt = login.OptionalOption<int?>(
           "--state",
-          $"Optional: State value used for the authentcation. Default: random generated string",
+          $"State value used for the authentcation",
+          "random generated string",
           CommandOptionType.SingleValue
         );
 
