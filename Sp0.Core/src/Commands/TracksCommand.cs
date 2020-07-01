@@ -94,9 +94,10 @@ namespace Sp0.Core
           "A list of Spotify track ids or uris, seperated by comma."
         ).IsRequired();
 
-        var market = get.Option<string>(
+        var market = get.OptionalOption<string>(
           "-m|--market",
-          "Optional: The specifc market, used for track re-linking",
+          "The specifc market, used for track re-linking",
+          "none",
           CommandOptionType.SingleValue
         );
 

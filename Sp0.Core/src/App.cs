@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -40,6 +41,8 @@ namespace Sp0.Core
         "--version",
         () => $"sp0 version {Version.AppVersion}"
       );
+
+      app.CompletionCommand("completion", new List<ICompletionProvider> { new ZSHCompletionProvider() });
 
       try
       {
