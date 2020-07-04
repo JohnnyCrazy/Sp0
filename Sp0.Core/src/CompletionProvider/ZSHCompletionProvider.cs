@@ -43,8 +43,6 @@ compdef _{app.Name} {app.Name}
 
   case $state in
     (args)
-      echo ""$line"" >> test.log
-       echo ""_{name}_{cmd.Name}_$line[1]"" >> test.log
        if type ""_{name}_{cmd.Name}_$line[1]"" 2>/dev/null | grep -q 'function'
        then
          _{name}_{cmd.Name}_$line[1]
