@@ -1,8 +1,9 @@
 # Sp0
 
-![Sp0 Build](https://github.com/JohnnyCrazy/Sp0/workflows/Sp0%20Build/badge.svg)
-![AUR version](https://img.shields.io/aur/version/sp0-bin?label=AUR)
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/JohnnyCrazy/Sp0?include_prereleases&label=GH%20Release)
+[![Sp0 Build](https://github.com/JohnnyCrazy/Sp0/workflows/Sp0%20Build/badge.svg)](https://github.com/JohnnyCrazy/Sp0/actions)
+[![AUR](https://img.shields.io/aur/version/sp0-bin?label=AUR)](https://aur.archlinux.org/packages/sp0-bin/)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/JohnnyCrazy/Sp0?include_prereleases&label=GH%20Release)](https://github.com/JohnnyCrazy/Sp0/releases)
+
 
 A simple CLI tool for interacting with the Spotify Web API with a strong focus on automation, written in .NET/C#. Under the hood, it's just a wrapper for supplying args to [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET/).
 
@@ -103,4 +104,4 @@ While this may sound bad to you, it has multiple advantages
 * No breaking through new .NET versions
 * Single file instead of 80 DLLs
 
-If you're not comfortable with this process but still would like to use this project, feel free to build it on your own and use the resulting DLLs in `/bin/Release/netcorerapp3.1/linux-x64` after running `dotnet publis -c Release`.
+If you're not comfortable with this process but still would like to use this project, feel free to build it on your own and use the resulting DLLs in `/bin/Release/netcorerapp3.1/linux-x64` after running `dotnet publish -c Release`.
